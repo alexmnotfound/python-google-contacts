@@ -1,3 +1,5 @@
 # User folders
 .idea/
 src/config/__pycache__/
+src/config/token.json
+app.log

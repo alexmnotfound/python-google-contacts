@@ -1,5 +1,5 @@
 import config.googleApi as people
-
+import logging
 
 def main():
     """
@@ -21,28 +21,35 @@ def main():
     ls = "\n#############################################\n"
     print(ls, 'Google People API for contacts management.', ls)
 
-    #
     # Check Google API connection
-    #
-    googleService = people.googleApiConn()
+    googleService = people.googleAPIConn()
+    googleService.people().searchContacts(
+        query='',
+        readMask='names,emailAddresses').execute()
 
-    # Check Contacts
-    # people.getContacts(googleService)
-
-    # Contact Info
+    # Contact Info (this comes from db)
     contactInfo = {
-        'name': "Matias Rodriguez",
+        'name': "José Rodriguez",
         'familyName': "12CABA",
-        'telephone': "3884701269",
-        'emailAddress': 'mrodriguez@ggggm.com'
+        'telephone': "388470123",
+        'emailAddress': 'mrodriguez@adkggm.com',
+        'clientID': '002212'
     }
 
+    # Check if contact exists. If it does, update all the matches,
+    # otherwise it'll create it
+    matches = people.getContactUnique(googleService, contactInfo)
 
-    # Create Contact
-    people.createContact(googleService, contactInfo)
+    if matches is not None:
+        print("Updating info of matching contacts")
+        people.updateContact(googleService, matches, contactInfo)
+    else:
+        print("No contacts have been found, proceeding to create it")
+        people.createContact(googleService, contactInfo)
 
-    # Get Single contact info
-    people.getContactUnique(googleService, contactInfo)
+    # Delete contact
+    # people.deleteContact(googleService, matches)
+
 
 
 if __name__ == '__main__':

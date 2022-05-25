@@ -7,10 +7,11 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
 ls = "\n#############################################\n"
 
 
-def googleApiConn():
+def googleAPIConn():
     """
     Configure Google People API call
     """
@@ -48,11 +49,7 @@ def googleApiConn():
     try:
         print("\n Checking API Connection")
         # Call the People API
-        results = service.people().connections().list(
-            resourceName='people/me',
-            pageSize=1,
-            personFields='names').execute()
-        connections = results.get('connections', [])
+        connections = getContacts(service, 1)
 
         if len(connections) >= 1:
             print("\n API connected successfully")
@@ -73,67 +70,79 @@ def googleApiConn():
     return service
 
 
-def getContacts(service):
+def getContacts(service, qty, show=False):
     """
     Get list of 10 contacts to check which fields are we getting
     """
     try:
-        print(ls, " Getting contacts from Google", ls)
+        print(" Trying to read contacts from Google")
         # Call the People API
-        print('List 10 connection names')
         results = service.people().connections().list(
             resourceName='people/me',
-            pageSize=10,
+            pageSize=qty,
             personFields='names,emailAddresses').execute()
         connections = results.get('connections', [])
 
-        for person in connections:
-            print(person)
-        """
-        # Get specific field from list
-        for person in connections:
-            names = person.get('names', [])
-            if names:
-                name = names[0].get('displayName')
-                print(name)
-        """
+        if show:
+            print(f'List {qty} connection names')
+            for person in connections:
+                print(person)
+
+        return connections
 
     except Exception as err:
         print(" ERROR> Something failed while getting contacts list")
         print(err)
 
 
-def createContact(service, contactInfo):
+def createBody(contactInfo):
     """
+    Creates structure for API post
+    """
+    name = contactInfo.get('name')
+    familyName = contactInfo.get('familyName')
+    telephone = contactInfo.get('telephone')
+    emailAddress = contactInfo.get('emailAddress')
+    clientID = contactInfo.get('clientID')
+
+    body = {
+        "names": [
+            {
+                "givenName": name,
+                "familyName": familyName
+            }
+        ],
+        "phoneNumbers": [
+            {
+                'value': telephone
+            }
+        ],
+        "emailAddresses": [
+            {
+                'value': emailAddress
+            }
+        ],
+        "nicknames": [
+            {
+                'value': clientID
+            }
+        ]
+    }
+
+    return body
+
+
+def createContact(service, contactInfo):
+    """ 
     Create new contact
     Check fields in https://developers.google.com/people/api/rest/v1/people/createContact
     """
     try:
         print(ls, " Creating contact into Google", ls)
 
-        name = contactInfo.get('name')
-        familyName = contactInfo.get('familyName')
-        telephone = contactInfo.get('telephone')
-        emailAddress = contactInfo.get('emailAddress')
+        body = createBody(contactInfo)
 
-        response = service.people().createContact(body={
-            "names": [
-                {
-                    "givenName": name,
-                    "familyName": familyName
-                }
-            ],
-            "phoneNumbers": [
-                {
-                    'value': telephone
-                }
-            ],
-            "emailAddresses": [
-                {
-                    'value': emailAddress
-                }
-            ]
-        }).execute()
+        response = service.people().createContact(body=body).execute()
 
         print(" Contact created successfully")
         print(response)
@@ -146,29 +155,129 @@ def createContact(service, contactInfo):
 def getContactUnique(service, contactInfo):
     """
     Get info about specific contact
+    Returns the matched qty and the contacts
     """
     try:
         print(ls, " Getting contact info from Google", ls)
-        # Call the People API
-        print('List contact info: ')
         name = contactInfo.get('name')
         familyName = contactInfo.get('familyName')
-        print(name, ", ", familyName)
+        clientID = contactInfo.get('clientID')
+
+        print(f' Searching in contacts list for: {clientID}, {name}, {familyName}')
 
         results = service.people().searchContacts(
             pageSize=10,
-            query=name,
+            query=clientID,
             readMask='names').execute()
 
-        if len(results) >= 1:
-            print("\n Contact Found")
+        results = results.get("results")
+
+        if results is not None:
+            print(f"\n Matches found: {len(results)}")
             print(results)
+            return results
 
         else:
-            print("\n Houston we have no contact in here")
-            return False
-
+            print("\n Matches found: 0")
+            return None
 
     except Exception as err:
         print(" ERROR> Something failed while getting contacts list")
         print(err)
+
+
+def updateContact(service, contactUpdate, contactInfo):
+    """
+    Update old contact
+    Check fields in https://developers.google.com/people/api/rest/v1/people/updateContact
+    """
+    try:
+        print(ls, " Updating contact into Google", ls)
+
+        for contact in contactUpdate:
+            print(contact)
+            contact = contact.get('person')
+            names = contact.get('names')[0]
+
+            name = names.get('displayName')
+            familyName = names.get('familyName')
+
+            resourceID, etag = getContactTag(contact)
+
+            print(f"{name}, {familyName}, {resourceID}, {etag}")
+
+            response = service.people().updateContact(
+                updatePersonFields='names,phoneNumbers,emailAddresses',
+                resourceName=resourceID,
+                body={
+                    "etag": etag,
+                    "names": [
+                        {
+                            "givenName": contactInfo.get('name'),
+                            "familyName": contactInfo.get('familyName')
+                        }
+                    ],
+                    "phoneNumbers": [
+                        {
+                            'value': contactInfo.get('telephone')
+                        }
+                    ],
+                    "emailAddresses": [
+                        {
+                            'value': contactInfo.get('emailAddress')
+                        }
+                    ]
+                }).execute()
+
+            print(" Contact updated successfully")
+            print(response)
+
+    except Exception as err:
+        print(" ERROR> Something failed while creating contact")
+        print(err)
+
+
+def deleteContact(service, contactUpdate):
+    """
+    Delete old contact
+    Check fields in https://developers.google.com/people/api/rest/v1/people/deleteContact
+    """
+    try:
+        print(ls, " Deleting contact from Google", ls)
+
+        for contact in contactUpdate:
+            print(contact)
+            contact = contact.get('person')
+            names = contact.get('names')[0]
+
+            name = names.get('displayName')
+            familyName = names.get('familyName')
+
+            resourceID, etag = getContactTag(contact)
+
+            print(f"{name}, {familyName}, {resourceID}, {etag}")
+
+            response = service.people().deleteContact(
+                resourceName=resourceID
+                ).execute()
+
+            print(" Contact deleted successfully")
+            print(response)
+
+    except Exception as err:
+        print(" ERROR> Something failed while deleting contact")
+        print(err)
+
+
+def getContactTag(contact):
+    resourceID = contact.get('resourceName')
+    etag = contact.get('etag')
+
+    return resourceID, etag
+
+
+def updateGooglebyDatabase():
+    """
+    TODO under development
+    JUST USE THIS IN CASE GOOGLE CONTACTS ISN'T UPDATED
+    """

@@ -4,7 +4,7 @@ Google contacts management
 
 # How to Exec
 
-1. Enable Google Sheets API: 
+1. Enable Google People API: 
    - https://console.cloud.google.com/apis/library/people.googleapis.com
 2. Authorize Scopes:
    - https://www.googleapis.com/auth/people 
@@ -14,6 +14,6 @@ Google contacts management
 
 # Google API Documentation
 
-Python quickstart: https://developers.google.com/people/quickstart/python
-API methods: https://developers.google.com/people/api/rest/v1/people/get
+- Python quickstart: https://developers.google.com/people/quickstart/python
+- API methods: https://developers.google.com/people/api/rest/v1/people/get
 
