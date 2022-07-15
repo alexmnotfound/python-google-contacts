@@ -72,7 +72,7 @@ def googleAPIConn():
 
 def getContacts(service, qty, show=False):
     """
-    Get list of 10 contacts to check which fields are we getting
+    Get list of contacts to check which fields are we getting
     """
     try:
         print(" Trying to read contacts from Google")
@@ -80,7 +80,7 @@ def getContacts(service, qty, show=False):
         results = service.people().connections().list(
             resourceName='people/me',
             pageSize=qty,
-            personFields='names,emailAddresses').execute()
+            personFields='names,emailAddresses,phoneNumbers').execute()
         connections = results.get('connections', [])
 
         if show:
@@ -186,7 +186,7 @@ def getContactUnique(service, contactInfo):
         print(err)
 
 
-def updateContact(service, contactUpdate, contactInfo):
+def updateContact(service, contactsUpdate, contactInfo):
     """
     Update old contact
     Check fields in https://developers.google.com/people/api/rest/v1/people/updateContact
@@ -194,7 +194,7 @@ def updateContact(service, contactUpdate, contactInfo):
     try:
         print(ls, " Updating contact into Google", ls)
 
-        for contact in contactUpdate:
+        for contact in contactsUpdate:
             print(contact)
             contact = contact.get('person')
             names = contact.get('names')[0]
@@ -237,7 +237,7 @@ def updateContact(service, contactUpdate, contactInfo):
         print(err)
 
 
-def deleteContact(service, contactUpdate):
+def deleteContact(service, contactsDelete):
     """
     Delete old contact
     Check fields in https://developers.google.com/people/api/rest/v1/people/deleteContact
@@ -245,18 +245,11 @@ def deleteContact(service, contactUpdate):
     try:
         print(ls, " Deleting contact from Google", ls)
 
-        for contact in contactUpdate:
-            print(contact)
+        for contact in contactsDelete:
             contact = contact.get('person')
-            names = contact.get('names')[0]
-
-            name = names.get('displayName')
-            familyName = names.get('familyName')
 
             resourceID, etag = getContactTag(contact)
-
-            print(f"{name}, {familyName}, {resourceID}, {etag}")
-
+            print(f"well hello there {resourceID}, and {etag}")
             response = service.people().deleteContact(
                 resourceName=resourceID
                 ).execute()
@@ -281,3 +274,7 @@ def updateGooglebyDatabase():
     TODO under development
     JUST USE THIS IN CASE GOOGLE CONTACTS ISN'T UPDATED
     """
+
+    # find matches by number, name or email
+    # update with client id
+

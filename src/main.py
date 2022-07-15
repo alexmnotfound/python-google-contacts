@@ -1,5 +1,5 @@
 import config.googleApi as people
-import logging
+
 
 def main():
     """
@@ -29,10 +29,10 @@ def main():
 
     # Contact Info (this comes from db)
     contactInfo = {
-        'name': "José Rodriguez",
+        'name': "Matias Alejandro Rodriguez",
         'familyName': "12CABA",
-        'telephone': "388470123",
-        'emailAddress': 'mrodriguez@adkggm.com',
+        'telephone': "3884701234",
+        'emailAddress': 'mrodriguez@jotmeil.com',
         'clientID': '002212'
     }
 
@@ -48,8 +48,8 @@ def main():
         people.createContact(googleService, contactInfo)
 
     # Delete contact
-    # people.deleteContact(googleService, matches)
-
+    if matches is not None:
+        people.deleteContact(googleService, matches)
 
 
 if __name__ == '__main__':
