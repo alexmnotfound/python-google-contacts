@@ -22,15 +22,20 @@ def main():
     ls = "\n#############################################\n"
     print(ls, 'Google People API for contacts management.', ls)
 
-    # get mode as delete or create
-    mode = str(sys.argv[1])
+    try:
+        # get mode as delete or create
+        allowedModes = ["delete", "create"]
+        mode = str(sys.argv[1])
 
-    allowedModes = ["delete", "create"]
+        if mode in allowedModes:
+            runProcess(mode)
+        else:
+            print(f"ERROR: argument {mode} is not allowed, try with {allowedModes}")
+    except IndexError:
+        print(f"ERROR: No mode has been passed, try with {allowedModes}")
+    except Exception as e:
+        print(f"ERROR: Something failed unexpectedly > {e}")
 
-    if mode in allowedModes:
-        runProcess(mode)
-    else:
-        print(f"ERROR: argument {mode} is not allowed, try with {allowedModes}")
 
 
 def runProcess(mode):
