@@ -233,7 +233,7 @@ def updateContact(service, contactsUpdate, contactInfo):
             print(response)
 
     except Exception as err:
-        print(" ERROR> Something failed while creating contact")
+        print(" ERROR: Something failed while creating contact")
         print(err)
 
 
@@ -249,7 +249,6 @@ def deleteContact(service, contactsDelete):
             contact = contact.get('person')
 
             resourceID, etag = getContactTag(contact)
-            print(f"well hello there {resourceID}, and {etag}")
             response = service.people().deleteContact(
                 resourceName=resourceID
                 ).execute()
@@ -258,7 +257,7 @@ def deleteContact(service, contactsDelete):
             print(response)
 
     except Exception as err:
-        print(" ERROR> Something failed while deleting contact")
+        print(" ERROR: Something failed while deleting contact")
         print(err)
 
 
