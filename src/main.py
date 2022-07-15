@@ -1,4 +1,5 @@
 import config.googleApi as people
+import sys
 
 
 def main():
@@ -21,6 +22,19 @@ def main():
     ls = "\n#############################################\n"
     print(ls, 'Google People API for contacts management.', ls)
 
+    # get mode as delete or create
+    mode = str(sys.argv[1])
+
+    allowedModes = ["delete", "create"]
+
+    if mode in allowedModes:
+        runProcess(mode)
+    else:
+        print(f"ERROR: argument {mode} is not allowed, try with {allowedModes}")
+
+
+def runProcess(mode):
+    print(f"Starting script for {mode} contact")
     # Check Google API connection
     googleService = people.googleAPIConn()
     googleService.people().searchContacts(
@@ -40,16 +54,18 @@ def main():
     # otherwise it'll create it
     matches = people.getContactUnique(googleService, contactInfo)
 
-    if matches is not None:
-        print("Updating info of matching contacts")
-        people.updateContact(googleService, matches, contactInfo)
-    else:
-        print("No contacts have been found, proceeding to create it")
-        people.createContact(googleService, contactInfo)
+    if mode == "create":
+        if matches is not None:
+            print("Updating info of matching contacts")
+            people.updateContact(googleService, matches, contactInfo)
+        else:
+            print("No contacts have been found, proceeding to create it")
+            people.createContact(googleService, contactInfo)
 
-    # Delete contact
-    if matches is not None:
-        people.deleteContact(googleService, matches)
+    if mode == "delete":
+        # Delete contact
+        if matches is not None:
+            people.deleteContact(googleService, matches)
 
 
 if __name__ == '__main__':

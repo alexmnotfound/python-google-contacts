@@ -18,7 +18,7 @@ def googleAPIConn():
     print("\n Connecting to Google People API ")
     # Setting parameters
     creds = None
-    configPath = os.path.join(os.getcwd(), "src/config/")
+    configPath = os.path.join(os.getcwd(), "./config/")
     tokenJson = configPath + 'token.json'
     credentialsFile = configPath + 'credentials.json'
 
